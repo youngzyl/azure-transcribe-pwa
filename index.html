@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure AI Transcriber</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0078d4">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>AI Transcriber</h1>
+            <button id="settings-btn" aria-label="Settings">⚙️</button>
+        </header>
+
+        <main id="transcript-container">
+            <div class="placeholder-text">Ready to record...</div>
+        </main>
+
+        <footer id="controls">
+            <div id="status-bar">Idle</div>
+            <button id="record-btn" class="start">Start Recording</button>
+        </footer>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Settings</h2>
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label for="endpoint">Azure Endpoint URL</label>
+                        <input type="text" id="endpoint" placeholder="https://YOUR_RESOURCE.openai.azure.com" required>
+                        <small>Base URL of your Azure OpenAI resource</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="deployment">Deployment Name</label>
+                        <input type="text" id="deployment" value="gpt-4o-transcribe-diarize" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="api-key">API Key</label>
+                        <input type="password" id="api-key" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="api-version">API Version</label>
+                        <input type="text" id="api-version" value="2024-10-01-preview">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="close-settings">Cancel</button>
+                        <button type="submit" class="primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden audio for background keep-alive -->
+    <audio id="silent-audio" loop muted playsinline>
+        <source src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" type="audio/mpeg">
+    </audio>
+
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
