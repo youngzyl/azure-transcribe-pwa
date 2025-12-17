@@ -27,6 +27,9 @@ export class AzureApiClient {
         const ext = audioBlob.type.includes('mp4') ? 'm4a' : 'webm'; 
         formData.append('file', audioBlob, `recording.${ext}`);
         
+        // Add model parameter as per API requirements (using deployment name)
+        formData.append('model', settings.deployment);
+
         // We assume gpt-4o-transcribe-diarize supports these parameters
         // Note: For diarization, it might return 'diarized_json' format.
         // The user specifically mentioned diarize model.
