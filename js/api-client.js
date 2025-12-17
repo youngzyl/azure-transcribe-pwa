@@ -102,4 +102,52 @@ export class AzureApiClient {
             throw error;
         }
     }
+
+    async postChatCompletion(messages, settings) {
+        if (!settings || !settings.endpoint || !settings.key || !settings.summaryDeployment) {
+            throw new Error("Missing Azure API configuration for summarization");
+        }
+
+        let baseUrl = settings.endpoint;
+        if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+        let url;
+        // Attempt to handle if user put a full URL, though we strongly prefer Base URL
+        if (baseUrl.includes('/openai/deployments') && !baseUrl.includes('/chat/completions')) {
+             console.warn("Endpoint looks like a full deployment URL (possibly for audio). Attempting to use it for chat might fail.");
+             // We'll try to use the standard construction anyway if we can't detect it's a chat URL.
+             // Actually, let's just stick to the standard construction for now.
+        }
+
+        // Standard format construction
+        // If baseUrl is "https://res.openai.azure.com/", this works.
+        // If baseUrl is "https://res.openai.azure.com/openai/deployments/dep/audio...", this will produce a double path.
+        // We'll assume the user followed instructions.
+        url = `${baseUrl}openai/deployments/${settings.summaryDeployment}/chat/completions?api-version=${settings.apiVersion}`;
+
+        const payload = {
+            messages: messages,
+            temperature: 0.7,
+            top_p: 0.95,
+            frequency_penalty: 0,
+            presence_penalty: 0
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'api-key': settings.key
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`API Error ${response.status}: ${errText}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0].message.content;
+    }
 }

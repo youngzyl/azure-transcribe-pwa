@@ -3,6 +3,7 @@ export class SettingsManager {
         this.endpointInput = document.getElementById('endpoint');
         this.keyInput = document.getElementById('api-key');
         this.deploymentInput = document.getElementById('deployment');
+        this.summaryDeploymentInput = document.getElementById('summary-deployment');
         this.apiVersionInput = document.getElementById('api-version');
         this.modal = document.getElementById('settings-modal');
         
@@ -17,6 +18,7 @@ export class SettingsManager {
             this.endpointInput.value = settings.endpoint || '';
             this.keyInput.value = settings.key || '';
             this.deploymentInput.value = settings.deployment || 'gpt-4o-transcribe-diarize';
+            this.summaryDeploymentInput.value = settings.summaryDeployment || 'gpt-4o';
             this.apiVersionInput.value = settings.apiVersion || '2024-10-01-preview';
         }
     }
@@ -26,6 +28,7 @@ export class SettingsManager {
             endpoint: this.endpointInput.value.trim(),
             key: this.keyInput.value.trim(),
             deployment: this.deploymentInput.value.trim(),
+            summaryDeployment: this.summaryDeploymentInput.value.trim(),
             apiVersion: this.apiVersionInput.value.trim()
         };
         localStorage.setItem('azure_settings', JSON.stringify(settings));
