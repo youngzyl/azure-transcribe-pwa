@@ -9,7 +9,7 @@ A web-based Progressive Web App (PWA) that records audio from your microphone an
 - **Speaker Diarization**: Identifies and labels different speakers in the conversation (requires a model/deployment that supports `diarized_json` response format, e.g., `gpt-4o-transcribe-diarize`).
 - **Automatic Fallback**: If the configured model (e.g., `gpt-4o-transcribe`) does not support diarization, the app automatically switches to standard transcription (`json` format) to ensure recording continues.
 - **Progressive Web App (PWA)**: Can be installed on devices and supports background recording on supported platforms.
-- **Real-time-ish Updates**: Uploads audio in 10-second chunks for near real-time transcription updates.
+- **Smart Chunking**: Automatically uploads audio when silence is detected or after 3 minutes, skipping silent periods to save bandwidth.
 
 ## Prerequisites
 
@@ -46,11 +46,11 @@ These settings are saved in your browser's `localStorage`.
 
 1. Configure your Azure settings.
 2. Click **Start Recording**.
-3. Speak into your microphone. The app will record in 10-second chunks and upload them.
+3. Speak into your microphone. The app will record and automatically upload chunks when you pause speaking (for >3 seconds) or every 3 minutes.
 4. Transcripts will appear in the main window as they are processed.
 5. Click **Stop Recording** to finish.
 
 ## Limitations
 
-- **Chunked Diarization**: Since audio is sent in independent chunks, speaker IDs (e.g., "Speaker 1") may not persist across chunks. "Speaker 1" in the first 10 seconds might be labeled "Speaker 1" in the next chunk, but the model treats them as separate requests context-wise.
+- **Chunked Diarization**: Since audio is sent in independent chunks, speaker IDs (e.g., "Speaker 1") may not persist across chunks. "Speaker 1" in the first chunk might be labeled "Speaker 1" in the next, but the model treats them as separate requests context-wise.
 - **Browser Permissions**: Requires microphone access.
