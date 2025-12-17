@@ -25,7 +25,10 @@ The `gpt-4o-transcribe-diarize` model is a REST API (file-based), not a streamin
 
 ### 3. API Integration
 *   The client sends `multipart/form-data` requests.
-*   It expects `response_format="diarized_json"`.
+*   **Parameters:**
+    *   `model`: Set to the deployment name (e.g., `gpt-4o-transcribe-diarize`).
+    *   `response_format`: Defaults to `"diarized_json"`.
+*   **Retry Logic:** If the API returns a 400 error indicating `diarized_json` is unsupported (code: `unsupported_value`), the client automatically retries with `response_format="json"` (standard transcription). This supports models like `gpt-4o-transcribe` which do not support diarization.
 
 ## Testing
 *   **Integration Tests:** Located in `verification/`. Use `playwright` to run them.

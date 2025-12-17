@@ -6,7 +6,8 @@ A web-based Progressive Web App (PWA) that records audio from your microphone an
 
 - **Audio Recording**: Captures audio directly from the browser.
 - **Azure OpenAI Integration**: Sends audio chunks to your Azure OpenAI Whisper deployment for accurate transcription.
-- **Speaker Diarization**: Identifies and labels different speakers in the conversation (requires a model/deployment that supports `diarized_json` response format).
+- **Speaker Diarization**: Identifies and labels different speakers in the conversation (requires a model/deployment that supports `diarized_json` response format, e.g., `gpt-4o-transcribe-diarize`).
+- **Automatic Fallback**: If the configured model (e.g., `gpt-4o-transcribe`) does not support diarization, the app automatically switches to standard transcription (`json` format) to ensure recording continues.
 - **Progressive Web App (PWA)**: Can be installed on devices and supports background recording on supported platforms.
 - **Real-time-ish Updates**: Uploads audio in 10-second chunks for near real-time transcription updates.
 
