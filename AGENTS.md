@@ -20,12 +20,18 @@ Mobile browsers (especially iOS Safari and Android Chrome) aggressively mute or 
 
 ### 2. "Real-time" Simulation
 The `gpt-4o-transcribe-diarize` model is a REST API (file-based), not a streaming WebSocket API.
-*   **Logic:** We simulate real-time transcription by slicing the audio into **10-second chunks** in `AudioManager`.
+*   **Logic:** We simulate real-time transcription by slicing the audio into chunks.
+    *   **Max Duration:** 3 minutes (180,000ms).
+    *   **VAD (Voice Activity Detection):** Checks for silence every 100ms. If speech is followed by >3 seconds of silence, the chunk is cut and uploaded immediately to reduce latency.
+    *   **Silence Skipping:** Chunks consisting of pure silence are discarded to save bandwidth.
 *   **Limitation:** Diarization (Speaker ID) context is lost between chunks. "Speaker 1" in Chunk A might be "Speaker 1" in Chunk B, but the API does not guarantee consistency across separate requests.
 
 ### 3. API Integration
-*   **Transcription:** The client sends `multipart/form-data` requests to the audio transcription endpoint. It expects `response_format="diarized_json"`.
-*   **Summarization:** The client sends `application/json` requests to the Chat Completions endpoint (`/chat/completions`) using the configured "Summary Deployment Name".
+*   The client sends `multipart/form-data` requests.
+*   **Parameters:**
+    *   `model`: Set to the deployment name (e.g., `gpt-4o-transcribe-diarize`).
+    *   `response_format`: Defaults to `"diarized_json"`.
+*   **Retry Logic:** If the API returns a 400 error indicating `diarized_json` is unsupported (code: `unsupported_value`), the client automatically retries with `response_format="json"` (standard transcription). This supports models like `gpt-4o-transcribe` which do not support diarization.
 
 ## Testing
 *   **Integration Tests:** Located in `verification/`. Use `playwright` to run them.
