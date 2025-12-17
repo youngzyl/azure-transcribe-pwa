@@ -1,10 +1,18 @@
 import { SettingsManager } from './settings.js';
 import { AudioManager } from './audio-manager.js';
+import { AzureApiClient } from './api-client.js';
 
 const settingsManager = new SettingsManager();
+const apiClient = new AzureApiClient();
+
 const recordBtn = document.getElementById('record-btn');
+const summarizeBtn = document.getElementById('summarize-btn');
 const statusBar = document.getElementById('status-bar');
 const transcriptContainer = document.getElementById('transcript-container');
+const summaryModal = document.getElementById('summary-modal');
+const summaryText = document.getElementById('summary-text');
+const closeSummaryBtn = document.getElementById('close-summary');
+const copySummaryBtn = document.getElementById('copy-summary');
 
 // Service Worker Registration for PWA
 if ('serviceWorker' in navigator) {
@@ -34,6 +42,75 @@ recordBtn.addEventListener('click', () => {
         stopRecording();
     }
 });
+
+summarizeBtn.addEventListener('click', async () => {
+    const text = getTranscriptText();
+    if (!text) {
+        alert("No transcript to summarize.");
+        return;
+    }
+
+    if (!settingsManager.isValid()) {
+        alert("Please configure settings first.");
+        return;
+    }
+    const settings = settingsManager.getSettings();
+    if (!settings.summaryDeployment) {
+        alert("Please configure a Summary Deployment Name in settings.");
+        return;
+    }
+
+    statusBar.innerText = "Summarizing...";
+    summarizeBtn.disabled = true;
+
+    try {
+        const messages = [
+            { role: "system", content: "You are a helpful assistant. Summarize the following transcript." },
+            { role: "user", content: text }
+        ];
+
+        // Initialize empty summary
+        showSummary("");
+
+        await apiClient.postChatCompletion(messages, settings, (currentText) => {
+            showSummary(currentText);
+        });
+
+        statusBar.innerText = "Idle";
+    } catch (err) {
+        console.error("Summarization failed:", err);
+        statusBar.innerText = "Error: " + err.message;
+        alert("Summarization failed: " + err.message);
+    } finally {
+        summarizeBtn.disabled = false;
+    }
+});
+
+closeSummaryBtn.addEventListener('click', () => {
+    summaryModal.classList.add('hidden');
+});
+
+copySummaryBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(summaryText.innerText);
+    copySummaryBtn.innerText = "Copied!";
+    setTimeout(() => copySummaryBtn.innerText = "Copy", 2000);
+});
+
+function showSummary(text) {
+    summaryText.innerText = text;
+    summaryModal.classList.remove('hidden');
+}
+
+function getTranscriptText() {
+    const segments = transcriptContainer.querySelectorAll('.transcript-segment');
+    let fullText = "";
+    segments.forEach(seg => {
+        const speaker = seg.querySelector('.speaker-label').innerText;
+        const content = seg.querySelector('div').innerText;
+        fullText += `${speaker}: ${content}\n`;
+    });
+    return fullText.trim();
+}
 
 function startRecording() {
     if (!settingsManager.isValid()) {

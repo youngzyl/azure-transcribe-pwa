@@ -102,4 +102,85 @@ export class AzureApiClient {
             throw error;
         }
     }
+
+    async postChatCompletion(messages, settings, onUpdate) {
+        let url;
+        let headers = {
+            'Content-Type': 'application/json'
+        };
+        let payload = {
+            messages: messages,
+            temperature: 0.7,
+            stream: true
+        };
+
+        if (settings.useCustomSummary) {
+            if (!settings.customEndpoint || !settings.customKey) {
+                throw new Error("Missing Custom API configuration");
+            }
+            url = settings.customEndpoint;
+            headers['api-key'] = settings.customKey;
+
+            if (settings.customModel) {
+                payload.model = settings.customModel;
+            }
+        } else {
+            if (!settings.endpoint || !settings.key || !settings.summaryDeployment) {
+                throw new Error("Missing Azure API configuration for summarization");
+            }
+
+            let baseUrl = settings.endpoint;
+            if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+            // Standard Azure format
+            url = `${baseUrl}openai/deployments/${settings.summaryDeployment}/chat/completions?api-version=${settings.apiVersion}`;
+            headers['api-key'] = settings.key;
+        }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`API Error ${response.status}: ${errText}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let fullText = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep partial line
+
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('data: ')) {
+                    const dataStr = line.slice(6);
+                    if (dataStr === '[DONE]') continue;
+                    try {
+                        const data = JSON.parse(dataStr);
+                        // Handle standard OpenAI delta
+                        const choice = data.choices && data.choices[0];
+                        if (choice && choice.delta && choice.delta.content) {
+                            fullText += choice.delta.content;
+                            if (onUpdate) onUpdate(fullText);
+                        }
+                    } catch (e) {
+                        console.warn("Error parsing SSE line", e);
+                    }
+                }
+            }
+        }
+
+        return fullText;
+    }
 }

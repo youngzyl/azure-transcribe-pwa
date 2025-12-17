@@ -1,0 +1,12 @@
+127.0.0.1 - - [17/Dec/2025 08:15:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:15:37] "GET /js/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:15:37] "GET /css/styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:15:37] "GET /js/settings.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:15:37] "GET /js/audio-manager.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:15:37] "GET /js/api-client.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:16:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:16:32] "GET /css/styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:16:32] "GET /js/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:16:32] "GET /js/settings.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:16:32] "GET /js/api-client.js HTTP/1.1" 200 -
+127.0.0.1 - - [17/Dec/2025 08:16:32] "GET /js/audio-manager.js HTTP/1.1" 200 -

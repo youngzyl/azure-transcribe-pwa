@@ -21,6 +21,7 @@
 
         <footer id="controls">
             <div id="status-bar">Idle</div>
+            <button id="summarize-btn" class="secondary">Summarize</button>
             <button id="record-btn" class="start">Start Recording</button>
         </footer>
 
@@ -41,6 +42,11 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="summary-deployment">Summary Deployment Name</label>
+                        <input type="text" id="summary-deployment" value="gpt-4o" required>
+                    </div>
+
+                    <div class="form-group">
                         <label for="api-key">API Key</label>
                         <input type="password" id="api-key" required>
                     </div>
@@ -50,11 +56,46 @@
                         <input type="text" id="api-version" value="2024-10-01-preview">
                     </div>
 
+                    <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e1dfdd;">
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+                            <input type="checkbox" id="use-custom-summary"> Use Custom OpenAI-Compatible Summary API
+                        </label>
+                    </div>
+
+                    <div id="custom-summary-config" class="hidden">
+                        <div class="form-group">
+                            <label for="custom-endpoint">Endpoint URL</label>
+                            <input type="text" id="custom-endpoint" placeholder="https://api.example.com/v1/chat/completions">
+                        </div>
+                        <div class="form-group">
+                            <label for="custom-key">API Key</label>
+                            <input type="password" id="custom-key">
+                        </div>
+                        <div class="form-group">
+                            <label for="custom-model">Model Name</label>
+                            <input type="text" id="custom-model" placeholder="e.g. gpt-4o">
+                        </div>
+                    </div>
+
                     <div class="form-actions">
                         <button type="button" id="close-settings">Cancel</button>
                         <button type="submit" class="primary">Save</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Summary Modal -->
+        <div id="summary-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>Summary</h2>
+                <div id="summary-text" style="white-space: pre-wrap; margin-bottom: 1rem; max-height: 300px; overflow-y: auto;"></div>
+                <div class="form-actions">
+                    <button type="button" id="close-summary">Close</button>
+                    <button type="button" id="copy-summary" class="primary">Copy</button>
+                </div>
             </div>
         </div>
     </div>
