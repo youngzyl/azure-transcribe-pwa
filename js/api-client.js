@@ -38,21 +38,41 @@ export class AzureApiClient {
         // We'll enable auto just in case.
         // formData.append('chunking_strategy', 'auto'); 
 
-        try {
+        const performRequest = async (currentFormData) => {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'api-key': settings.key
                 },
-                body: formData
+                body: currentFormData
             });
 
             if (!response.ok) {
                 const errText = await response.text();
+                // Check for specific compatibility error
+                if (response.status === 400 &&
+                    errText.includes("response_format 'diarized_json' is not compatible with model")) {
+                    return { retry: true, error: errText };
+                }
                 throw new Error(`API Error ${response.status}: ${errText}`);
             }
 
-            return await response.json();
+            return { retry: false, data: await response.json() };
+        };
+
+        try {
+            let result = await performRequest(formData);
+
+            if (result.retry) {
+                console.warn("Diarization not supported by this model, falling back to standard transcription.");
+                // Update response_format to verbose_json
+                formData.set('response_format', 'verbose_json');
+                result = await performRequest(formData);
+                // If it fails again, it will throw normally
+            }
+
+            return result.data;
+
         } catch (error) {
             console.error("API Upload Failed:", error);
             throw error;
