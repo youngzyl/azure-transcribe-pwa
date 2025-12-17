@@ -24,12 +24,13 @@ The `gpt-4o-transcribe-diarize` model is a REST API (file-based), not a streamin
 *   **Limitation:** Diarization (Speaker ID) context is lost between chunks. "Speaker 1" in Chunk A might be "Speaker 1" in Chunk B, but the API does not guarantee consistency across separate requests.
 
 ### 3. API Integration
-*   The client sends `multipart/form-data` requests.
-*   It expects `response_format="diarized_json"`.
+*   **Transcription:** The client sends `multipart/form-data` requests to the audio transcription endpoint. It expects `response_format="diarized_json"`.
+*   **Summarization:** The client sends `application/json` requests to the Chat Completions endpoint (`/chat/completions`) using the configured "Summary Deployment Name".
 
 ## Testing
 *   **Integration Tests:** Located in `verification/`. Use `playwright` to run them.
 *   **Mocking:** Since the app requires a microphone and Azure keys, tests usually mock the `fetch` API and use Chrome flags (`--use-fake-device-for-media-stream`) to simulate audio input.
+*   **Service Worker & Playwright:** The application registers a Service Worker (`sw.js`). When running Playwright tests that rely on network interception (`page.route`), the Service Worker can bypass these interceptions if it handles the fetch. To successfully mock API calls in Playwright, verify that the Service Worker is disabled or unregistered (e.g., via `page.add_init_script("delete navigator.serviceWorker;")`).
 
 ## Deployment
 This is a static site. It can be deployed to GitHub Pages, Vercel, or any static host. Ensure `sw.js` and `manifest.json` are served correctly.

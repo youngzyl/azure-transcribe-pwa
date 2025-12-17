@@ -7,6 +7,7 @@ A web-based Progressive Web App (PWA) that records audio from your microphone an
 - **Audio Recording**: Captures audio directly from the browser.
 - **Azure OpenAI Integration**: Sends audio chunks to your Azure OpenAI Whisper deployment for accurate transcription.
 - **Speaker Diarization**: Identifies and labels different speakers in the conversation (requires a model/deployment that supports `diarized_json` response format).
+- **Transcript Summarization**: Uses an LLM (e.g., GPT-4o) to generate a summary of the recorded conversation.
 - **Progressive Web App (PWA)**: Can be installed on devices and supports background recording on supported platforms.
 - **Real-time-ish Updates**: Uploads audio in 10-second chunks for near real-time transcription updates.
 
@@ -35,7 +36,8 @@ Since this project uses ES Modules, you need to serve it using a local web serve
 On the first load, the **Settings** modal will appear. You need to provide:
 
 - **Azure Endpoint URL**: The base URL of your Azure OpenAI resource (e.g., `https://my-resource.openai.azure.com`).
-- **Deployment Name**: The name of your model deployment (e.g., `gpt-4o-transcribe-diarize` or `my-whisper-model`).
+- **Deployment Name**: The name of your transcription model deployment (e.g., `gpt-4o-transcribe-diarize` or `my-whisper-model`).
+- **Summary Deployment Name**: The name of your chat completion model deployment used for summarization (e.g., `gpt-4o`).
 - **API Key**: One of the keys for your Azure OpenAI resource.
 - **API Version**: The API version to use (default: `2024-10-01-preview`).
 
@@ -48,6 +50,7 @@ These settings are saved in your browser's `localStorage`.
 3. Speak into your microphone. The app will record in 10-second chunks and upload them.
 4. Transcripts will appear in the main window as they are processed.
 5. Click **Stop Recording** to finish.
+6. Click **Summarize** to generate a summary of the conversation.
 
 ## Limitations
 
