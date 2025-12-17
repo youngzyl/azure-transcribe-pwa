@@ -20,7 +20,7 @@ Mobile browsers (especially iOS Safari and Android Chrome) aggressively mute or 
 
 ### 2. "Real-time" Simulation
 The `gpt-4o-transcribe-diarize` model is a REST API (file-based), not a streaming WebSocket API.
-*   **Logic:** We simulate real-time transcription by slicing the audio into **10-second chunks** in `AudioManager`.
+*   **Logic:** We simulate real-time transcription by slicing the audio into **3-minute chunks** in `AudioManager`.
 *   **Limitation:** Diarization (Speaker ID) context is lost between chunks. "Speaker 1" in Chunk A might be "Speaker 1" in Chunk B, but the API does not guarantee consistency across separate requests.
 
 ### 3. API Integration

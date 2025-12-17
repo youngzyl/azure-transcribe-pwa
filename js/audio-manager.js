@@ -15,7 +15,7 @@ export class AudioManager {
         // Background keep-alive elements
         this.silentAudio = document.getElementById('silent-audio');
         
-        this.CHUNK_DURATION_MS = 10000; // 10 seconds chunks
+        this.CHUNK_DURATION_MS = 180000; // 3 minutes chunks
     }
 
     async start() {
