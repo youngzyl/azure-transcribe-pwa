@@ -89,8 +89,8 @@ export class AzureApiClient {
 
             if (result.retry) {
                 console.warn("Diarization not supported by this model, falling back to standard transcription.");
-                // Update response_format to verbose_json
-                formData.set('response_format', 'verbose_json');
+                // Update response_format to json (gpt-4o-transcribe supports json or text, not verbose_json)
+                formData.set('response_format', 'json');
                 result = await performRequest(formData);
                 // If it fails again, it will throw normally
             }
