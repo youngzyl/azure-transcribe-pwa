@@ -49,11 +49,32 @@ export class AzureApiClient {
 
             if (!response.ok) {
                 const errText = await response.text();
-                // Check for specific compatibility error
-                if (response.status === 400 &&
+                let isCompatibilityError = false;
+
+                // Try to parse JSON to check for specific compatibility error
+                try {
+                    const errJson = JSON.parse(errText);
+                    const errorObj = errJson.error || {};
+                    if (response.status === 400 &&
+                        errorObj.code === 'unsupported_value' &&
+                        errorObj.param === 'response_format' &&
+                        (errorObj.message && errorObj.message.includes('diarized_json'))) {
+                        isCompatibilityError = true;
+                    }
+                } catch (e) {
+                    // Ignore JSON parse error
+                }
+
+                // Fallback string check
+                if (!isCompatibilityError && response.status === 400 &&
                     errText.includes("response_format 'diarized_json' is not compatible with model")) {
+                    isCompatibilityError = true;
+                }
+
+                if (isCompatibilityError) {
                     return { retry: true, error: errText };
                 }
+
                 throw new Error(`API Error ${response.status}: ${errText}`);
             }
 
