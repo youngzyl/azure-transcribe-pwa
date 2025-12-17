@@ -69,8 +69,13 @@ summarizeBtn.addEventListener('click', async () => {
             { role: "user", content: text }
         ];
 
-        const summary = await apiClient.postChatCompletion(messages, settings);
-        showSummary(summary);
+        // Initialize empty summary
+        showSummary("");
+
+        await apiClient.postChatCompletion(messages, settings, (currentText) => {
+            showSummary(currentText);
+        });
+
         statusBar.innerText = "Idle";
     } catch (err) {
         console.error("Summarization failed:", err);

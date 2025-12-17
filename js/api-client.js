@@ -103,42 +103,43 @@ export class AzureApiClient {
         }
     }
 
-    async postChatCompletion(messages, settings) {
-        if (!settings || !settings.endpoint || !settings.key || !settings.summaryDeployment) {
-            throw new Error("Missing Azure API configuration for summarization");
-        }
-
-        let baseUrl = settings.endpoint;
-        if (!baseUrl.endsWith('/')) baseUrl += '/';
-
+    async postChatCompletion(messages, settings, onUpdate) {
         let url;
-        // Attempt to handle if user put a full URL, though we strongly prefer Base URL
-        if (baseUrl.includes('/openai/deployments') && !baseUrl.includes('/chat/completions')) {
-             console.warn("Endpoint looks like a full deployment URL (possibly for audio). Attempting to use it for chat might fail.");
-             // We'll try to use the standard construction anyway if we can't detect it's a chat URL.
-             // Actually, let's just stick to the standard construction for now.
-        }
-
-        // Standard format construction
-        // If baseUrl is "https://res.openai.azure.com/", this works.
-        // If baseUrl is "https://res.openai.azure.com/openai/deployments/dep/audio...", this will produce a double path.
-        // We'll assume the user followed instructions.
-        url = `${baseUrl}openai/deployments/${settings.summaryDeployment}/chat/completions?api-version=${settings.apiVersion}`;
-
-        const payload = {
+        let headers = {
+            'Content-Type': 'application/json'
+        };
+        let payload = {
             messages: messages,
             temperature: 0.7,
-            top_p: 0.95,
-            frequency_penalty: 0,
-            presence_penalty: 0
+            stream: true
         };
+
+        if (settings.useCustomSummary) {
+            if (!settings.customEndpoint || !settings.customKey) {
+                throw new Error("Missing Custom API configuration");
+            }
+            url = settings.customEndpoint;
+            headers['api-key'] = settings.customKey;
+
+            if (settings.customModel) {
+                payload.model = settings.customModel;
+            }
+        } else {
+            if (!settings.endpoint || !settings.key || !settings.summaryDeployment) {
+                throw new Error("Missing Azure API configuration for summarization");
+            }
+
+            let baseUrl = settings.endpoint;
+            if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+            // Standard Azure format
+            url = `${baseUrl}openai/deployments/${settings.summaryDeployment}/chat/completions?api-version=${settings.apiVersion}`;
+            headers['api-key'] = settings.key;
+        }
 
         const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'api-key': settings.key
-            },
+            headers: headers,
             body: JSON.stringify(payload)
         });
 
@@ -147,7 +148,39 @@ export class AzureApiClient {
             throw new Error(`API Error ${response.status}: ${errText}`);
         }
 
-        const data = await response.json();
-        return data.choices[0].message.content;
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+        let fullText = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let lines = buffer.split('\n');
+            buffer = lines.pop(); // Keep partial line
+
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('data: ')) {
+                    const dataStr = line.slice(6);
+                    if (dataStr === '[DONE]') continue;
+                    try {
+                        const data = JSON.parse(dataStr);
+                        // Handle standard OpenAI delta
+                        const choice = data.choices && data.choices[0];
+                        if (choice && choice.delta && choice.delta.content) {
+                            fullText += choice.delta.content;
+                            if (onUpdate) onUpdate(fullText);
+                        }
+                    } catch (e) {
+                        console.warn("Error parsing SSE line", e);
+                    }
+                }
+            }
+        }
+
+        return fullText;
     }
 }
