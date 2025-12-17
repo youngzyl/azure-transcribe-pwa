@@ -27,6 +27,9 @@ export class AzureApiClient {
         const ext = audioBlob.type.includes('mp4') ? 'm4a' : 'webm'; 
         formData.append('file', audioBlob, `recording.${ext}`);
         
+        // Add model parameter as per API requirements (using deployment name)
+        formData.append('model', settings.deployment);
+
         // We assume gpt-4o-transcribe-diarize supports these parameters
         // Note: For diarization, it might return 'diarized_json' format.
         // The user specifically mentioned diarize model.
@@ -49,11 +52,32 @@ export class AzureApiClient {
 
             if (!response.ok) {
                 const errText = await response.text();
-                // Check for specific compatibility error
-                if (response.status === 400 &&
+                let isCompatibilityError = false;
+
+                // Try to parse JSON to check for specific compatibility error
+                try {
+                    const errJson = JSON.parse(errText);
+                    const errorObj = errJson.error || {};
+                    if (response.status === 400 &&
+                        errorObj.code === 'unsupported_value' &&
+                        errorObj.param === 'response_format' &&
+                        (errorObj.message && errorObj.message.includes('diarized_json'))) {
+                        isCompatibilityError = true;
+                    }
+                } catch (e) {
+                    // Ignore JSON parse error
+                }
+
+                // Fallback string check
+                if (!isCompatibilityError && response.status === 400 &&
                     errText.includes("response_format 'diarized_json' is not compatible with model")) {
+                    isCompatibilityError = true;
+                }
+
+                if (isCompatibilityError) {
                     return { retry: true, error: errText };
                 }
+
                 throw new Error(`API Error ${response.status}: ${errText}`);
             }
 
@@ -65,8 +89,8 @@ export class AzureApiClient {
 
             if (result.retry) {
                 console.warn("Diarization not supported by this model, falling back to standard transcription.");
-                // Update response_format to verbose_json
-                formData.set('response_format', 'verbose_json');
+                // Update response_format to json (gpt-4o-transcribe supports json or text, not verbose_json)
+                formData.set('response_format', 'json');
                 result = await performRequest(formData);
                 // If it fails again, it will throw normally
             }
